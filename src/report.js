@@ -3,20 +3,20 @@ import { addDays, localParts } from './time.js';
 const OUTLIER_METERS = 300;
 
 export const FLAG_HELP = {
-  hash_mismatch: 'Record content does not match its fingerprint – it was edited after being saved.',
-  chain_broken: 'Record does not link to the previous one from this phone – records may have been deleted or edited.',
-  missing_previous: 'An earlier record from this phone never arrived (deleted, or app data cleared).',
-  clock_went_back: 'Time is earlier than the previous punch from this phone – the phone clock was moved back.',
-  phone_clock_wrong: 'When the phone synced its clock was more than 5 minutes off. Shown time may be wrong; see "estimated".',
-  future_time: 'Punch time is in the future.',
-  new_device: 'First punch from a new phone / reinstalled app for this employee.',
-  qr_missing: 'No poster QR code was scanned.',
-  qr_invalid: 'The scanned code is not one of your posters.',
-  qr_retired: 'Scanned an old poster that had already been replaced (maybe a photo of it).',
-  qr_before_poster: 'Punch claims a time before the scanned poster was printed – phone clock was set back.',
-  no_gps: 'Location was not available.',
-  gps_inaccurate: 'Location was very imprecise (over 200 m).',
-  far_from_others: 'Location is far (300 m+) from where everyone else punched that day.',
+  hash_mismatch: 'محتوى التسجيل لا يطابق بصمته – تم تعديله بعد الحفظ.',
+  chain_broken: 'التسجيل لا يرتبط بالتسجيل السابق من نفس الهاتف – ربما تم حذف أو تعديل تسجيلات.',
+  missing_previous: 'تسجيل سابق من هذا الهاتف لم يصل أبداً (محذوف، أو تم مسح بيانات التطبيق).',
+  clock_went_back: 'الوقت أقدم من التسجيل السابق من نفس الهاتف – تم إرجاع ساعة الهاتف.',
+  phone_clock_wrong: 'عند الإرسال كانت ساعة الهاتف مختلفة بأكثر من 5 دقائق. الوقت المعروض قد يكون خطأ؛ انظر "الحقيقي".',
+  future_time: 'وقت التسجيل في المستقبل.',
+  new_device: 'أول تسجيل من هاتف جديد / تطبيق أعيد تثبيته لهذا الموظف.',
+  qr_missing: 'لم يتم مسح كود الملصق.',
+  qr_invalid: 'الكود الممسوح ليس من ملصقاتك.',
+  qr_retired: 'تم مسح ملصق قديم تم استبداله (ربما صورة له).',
+  qr_before_poster: 'وقت التسجيل قبل طباعة الملصق الممسوح – تم إرجاع ساعة الهاتف.',
+  no_gps: 'الموقع لم يكن متاحاً.',
+  gps_inaccurate: 'الموقع غير دقيق جداً (أكثر من 200 م).',
+  far_from_others: 'الموقع بعيد (أكثر من 300 م) عن مكان تسجيل باقي الموظفين في نفس اليوم.',
 };
 
 function haversine(a, b) {
@@ -85,14 +85,16 @@ export function buildReport(db, { from, to, tz, employeeId }) {
 
 export function toCsv(report) {
   const esc = (v) => (v == null ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
-  const lines = [['date', 'time', 'employee', 'type', 'estimated_real_time', 'lat', 'lng', 'accuracy_m', 'source', 'flags', 'note']];
+  const typeAr = { in: 'وصول', out: 'انصراف' };
+  const lines = [['التاريخ', 'الوقت', 'الموظف', 'النوع', 'الوقت الحقيقي المقدر', 'خط العرض', 'خط الطول', 'الدقة (م)', 'المصدر', 'ملاحظات المراجعة', 'ملاحظة']];
   for (const p of report.punches) {
-    lines.push([p.date, p.time, p.name, p.type, p.estimated, p.lat, p.lng, p.accuracy, p.source, p.flags.join(' '), p.note]);
+    lines.push([p.date, p.time, p.name, typeAr[p.type], p.estimated, p.lat, p.lng, p.accuracy, p.source === 'manual' ? 'يدوي' : 'التطبيق', p.flags.map((f) => FLAG_HELP[f] || f).join(' | '), p.note]);
   }
   lines.push([]);
-  lines.push(['date', 'employee', 'first_in', 'last_out', 'worked_hours', 'still_open', 'flagged_punches']);
+  lines.push(['التاريخ', 'الموظف', 'أول وصول', 'آخر انصراف', 'ساعات العمل', 'لم ينصرف', 'تسجيلات للمراجعة']);
   for (const d of report.days) {
-    lines.push([d.date, d.name, d.firstIn, d.lastOut, (d.workedMinutes / 60).toFixed(2), d.stillOpen, d.flagged]);
+    lines.push([d.date, d.name, d.firstIn, d.lastOut, (d.workedMinutes / 60).toFixed(2), d.stillOpen ? 'نعم' : 'لا', d.flagged]);
   }
-  return lines.map((l) => l.map(esc).join(',')).join('\n') + '\n';
+  // BOM so Excel opens Arabic text correctly
+  return '\uFEFF' + lines.map((l) => l.map(esc).join(',')).join('\n') + '\n';
 }

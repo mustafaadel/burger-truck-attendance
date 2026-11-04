@@ -39,8 +39,8 @@ export function createApp(db, { adminPassword, tz = 'Africa/Cairo' }) {
   function employeeAuth(req, res, next) {
     const m = /^Bearer (.+)$/.exec(req.get('authorization') || '');
     const emp = m && db.prepare('SELECT * FROM employees WHERE token = ?').get(m[1]);
-    if (!emp) return res.status(401).json({ error: 'unknown or reset link – ask your manager for a new one' });
-    if (!emp.active) return res.status(403).json({ error: 'account disabled' });
+    if (!emp) return res.status(401).json({ error: 'رابط غير معروف أو تم تغييره – اطلب رابطاً جديداً من المدير' });
+    if (!emp.active) return res.status(403).json({ error: 'الحساب موقوف' });
     req.employee = emp;
     next();
   }
@@ -58,7 +58,7 @@ export function createApp(db, { adminPassword, tz = 'Africa/Cairo' }) {
     const m = /^Basic (.+)$/.exec(req.get('authorization') || '');
     const pass = m ? Buffer.from(m[1], 'base64').toString().split(':').slice(1).join(':') : '';
     if (m && timingSafeEqual(sha(pass), want)) return next();
-    res.set('WWW-Authenticate', 'Basic realm="Burger truck admin"').status(401).send('Login required');
+    res.set('WWW-Authenticate', 'Basic realm="Burger truck admin"').status(401).type('text/plain; charset=utf-8').send('يجب تسجيل الدخول');
   }
   app.use(['/admin', '/api/admin'], adminAuth);
   app.use('/admin', express.static(path.join(publicDir, 'admin')));
@@ -73,7 +73,7 @@ export function createApp(db, { adminPassword, tz = 'Africa/Cairo' }) {
 
   app.post('/api/admin/employees', (req, res) => {
     const name = String(req.body?.name || '').trim();
-    if (!name) return res.status(400).json({ error: 'name required' });
+    if (!name) return res.status(400).json({ error: 'الاسم مطلوب' });
     const r = db.prepare('INSERT INTO employees (name, phone, token, created_at) VALUES (?,?,?,?)')
       .run(name, String(req.body?.phone || '').trim() || null, token(), Date.now());
     res.json({ id: Number(r.lastInsertRowid) });
@@ -122,7 +122,7 @@ export function createApp(db, { adminPassword, tz = 'Africa/Cairo' }) {
   app.post('/api/admin/punches', (req, res) => {
     const { employeeId, type, localTime, note } = req.body || {};
     const emp = db.prepare('SELECT id FROM employees WHERE id = ?').get(employeeId);
-    if (!emp || !['in', 'out'].includes(type)) return res.status(400).json({ error: 'employee and type required' });
+    if (!emp || !['in', 'out'].includes(type)) return res.status(400).json({ error: 'الموظف والنوع مطلوبان' });
     let t;
     try { t = zonedToEpoch(String(localTime), tz); } catch (e) { return res.status(400).json({ error: e.message }); }
     const id = randomUUID();

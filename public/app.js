@@ -47,38 +47,39 @@ function toast(msg, ms = 3500) {
   const t = $('toast'); t.textContent = msg; t.hidden = false;
   clearTimeout(toast.h); toast.h = setTimeout(() => (t.hidden = true), ms);
 }
-const fmt = (ms) => new Date(ms).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' });
+const LOCALE = 'ar-EG';
+const fmt = (ms) => new Date(ms).toLocaleString(LOCALE, { weekday: 'short', hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' });
 
 async function render() {
   const me = await kvGet('me');
   $('not-enrolled').hidden = !!me;
   $('home').hidden = !me;
   if (!me) return;
-  $('who').textContent = me.name || '(name will appear after first sync)';
+  $('who').textContent = me.name || '(سيظهر الاسم بعد أول إرسال)';
 
   const list = (await allPunches()).sort((a, b) => b.seq - a.seq);
   const last = list[0];
   $('state').textContent = last
-    ? `Last: ${last.type === 'in' ? 'arrived' : 'left'} at ${fmt(last.deviceTime)}`
-    : 'No punches yet.';
+    ? `آخر تسجيل: ${last.type === 'in' ? 'وصول' : 'انصراف'} – ${fmt(last.deviceTime)}`
+    : 'لا توجد تسجيلات بعد.';
 
   const pending = list.filter((p) => p.status === 'pending').length;
   $('pending').hidden = !pending;
-  $('pending').textContent = `${pending} punch${pending > 1 ? 'es' : ''} saved on this phone, waiting for internet to send.`;
+  $('pending').textContent = `${pending === 1 ? 'تسجيل واحد محفوظ' : `${pending} تسجيلات محفوظة`} على هذا الهاتف، في انتظار الإنترنت للإرسال.`;
   $('btn-sync').hidden = !pending;
 
   $('history').replaceChildren(...list.slice(0, 15).map((p) => {
     const li = document.createElement('li');
-    const status = { pending: '⏳ saved, not sent yet', sent: '✓ sent', rejected: `⚠ rejected (${p.reason})` }[p.status];
+    const status = { pending: '⏳ محفوظ، لم يُرسل بعد', sent: '✓ تم الإرسال', rejected: `⚠ مرفوض (${p.reason})` }[p.status];
     li.innerHTML = `<span class="t"></span><span class="s"></span>`;
-    li.firstChild.textContent = `${p.type === 'in' ? '🟢 Arrived' : '🔴 Left'} · ${fmt(p.deviceTime)}`;
-    li.lastChild.textContent = status + (p.flags?.length ? ' · needs review' : '');
+    li.firstChild.textContent = `${p.type === 'in' ? '🟢 وصول' : '🔴 انصراف'} · ${fmt(p.deviceTime)}`;
+    li.lastChild.textContent = status + (p.flags?.length ? ' · يحتاج مراجعة' : '');
     return li;
   }));
 }
 
 function renderNet() {
-  $('net').textContent = navigator.onLine ? 'online' : 'offline – OK';
+  $('net').textContent = navigator.onLine ? 'متصل' : 'بدون إنترنت – عادي';
 }
 
 // ---------- location ----------
@@ -107,7 +108,7 @@ function scanQR() {
     };
     $('btn-cancel').onclick = () => finish(undefined);
     $('btn-manual').onclick = () => {
-      const c = prompt('Type the 6-letter code printed under the QR on the truck poster:');
+      const c = prompt('اكتب الكود المكوّن من 6 حروف المطبوع تحت الـ QR على ملصق العربة:');
       if (c && c.trim()) finish(c.trim().toUpperCase());
     };
     sc.hidden = false;
@@ -116,7 +117,7 @@ function scanQR() {
       video.srcObject = stream;
       await video.play();
     } catch {
-      toast('Camera not available – type the code instead.');
+      toast('الكاميرا غير متاحة – اكتب الكود بدلاً من ذلك.');
       return;
     }
     const tick = () => {
@@ -147,7 +148,7 @@ async function punch(type) {
     const qr = await scanQR();
     if (qr === undefined) return;      // cancelled
     const deviceTime = Date.now();     // the moment they scanned the poster
-    toast('Getting location…', 20000);
+    toast('جارٍ تحديد الموقع…', 20000);
     const loc = await locP;
 
     const chain = (await kvGet('chain')) || { seq: 0, lastHash: GENESIS };
@@ -159,11 +160,11 @@ async function punch(type) {
     r.hash = await sha256(canonical(r));
     await commitPunch({ ...r, status: 'pending' }, { seq: r.seq, lastHash: r.hash });
 
-    toast(`${type === 'in' ? 'Arrival' : 'Leaving'} saved at ${new Date(deviceTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${loc ? '' : ' (no location)'} ✓`);
+    toast(`تم حفظ ${type === 'in' ? 'الوصول' : 'الانصراف'} الساعة ${new Date(deviceTime).toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' })}${loc ? '' : ' (بدون موقع)'} ✓`);
     await render();
     sync();
   } catch (e) {
-    toast('Could not save: ' + e.message, 6000);
+    toast('تعذّر الحفظ: ' + e.message, 6000);
   } finally {
     busy = false;
     $('btn-in').disabled = $('btn-out').disabled = false;
@@ -184,7 +185,7 @@ async function sync() {
       const { name } = await meRes.json();
       if (name !== me.name) await kvSet('me', { ...me, name });
     } else if (meRes.status === 401) {
-      toast('Your setup link was reset. Ask your manager for a new one.', 8000);
+      toast('تم تغيير رابط الإعداد الخاص بك. اطلب رابطاً جديداً من المدير.', 8000);
       return;
     }
 
@@ -196,7 +197,7 @@ async function sync() {
       headers: { 'content-type': 'application/json', authorization: `Bearer ${me.token}` },
       body: JSON.stringify({ deviceNow: Date.now(), records }),
     });
-    if (!res.ok) throw new Error(`server said ${res.status}`);
+    if (!res.ok) throw new Error(`خطأ من الخادم ${res.status}`);
     const out = await res.json();
     const s = await store('punches', 'readwrite');
     for (const p of pending) {
@@ -205,7 +206,7 @@ async function sync() {
       else if (rej) s.put({ ...p, status: 'rejected', reason: rej.reason });
     }
     await new Promise((r) => (s.transaction.oncomplete = r));
-    toast(`Sent ${out.accepted.length} punch${out.accepted.length === 1 ? '' : 'es'} ✓`);
+    toast(`تم إرسال ${out.accepted.length} ${out.accepted.length === 1 ? 'تسجيل' : 'تسجيلات'} ✓`);
   } catch {
     // no/flaky internet: keep everything, try again later
   } finally {
@@ -223,21 +224,21 @@ async function enrollFromHash() {
   const me = { token: m[1], name: null, deviceId: prev?.deviceId || crypto.randomUUID() };
   try {
     const r = await fetch('/api/me', { headers: { authorization: `Bearer ${me.token}` } });
-    if (r.status === 401) { toast('This setup link is not valid anymore.', 6000); return; }
+    if (r.status === 401) { toast('رابط الإعداد هذا لم يعد صالحاً.', 6000); return; }
     if (r.ok) me.name = (await r.json()).name;
   } catch { /* offline: keep token, name comes later */ }
   await kvSet('me', me);
   try { await navigator.storage?.persist?.(); } catch {}
-  toast(`Welcome${me.name ? ', ' + me.name : ''}! Add this page to your home screen.`, 6000);
+  toast(`أهلاً بك${me.name ? ' يا ' + me.name : ''}! أضف هذه الصفحة إلى الشاشة الرئيسية.`, 6000);
 }
 
 // ---------- boot ----------
 (async () => {
-  if (!window.isSecureContext) toast('This app must be opened over https:// to work.', 10000);
+  if (!window.isSecureContext) toast('يجب فتح التطبيق عبر https:// ليعمل.', 10000);
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
   $('btn-in').onclick = () => punch('in');
   $('btn-out').onclick = () => punch('out');
-  $('btn-sync').onclick = () => (navigator.onLine ? sync() : toast('No internet right now. It will send automatically later.'));
+  $('btn-sync').onclick = () => (navigator.onLine ? sync() : toast('لا يوجد إنترنت الآن. سيتم الإرسال تلقائياً لاحقاً.'));
   addEventListener('online', () => { renderNet(); sync(); });
   addEventListener('offline', renderNet);
   document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && sync());

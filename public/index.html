@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#c2410c">
-  <title>Truck Clock-In</title>
+  <title>حضور العربة</title>
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/icon.svg">
   <link rel="apple-touch-icon" href="/icon.svg">
@@ -14,27 +14,27 @@
 </head>
 <body>
   <header>
-    <div class="brand">🍔 Truck Clock-In</div>
+    <div class="brand">🍔 حضور العربة</div>
     <div id="net" class="pill">…</div>
   </header>
 
   <main>
     <section id="not-enrolled" hidden>
-      <h1>Not set up yet</h1>
-      <p>Ask your manager for your personal setup link (or QR code), and open it <b>once while you have internet</b>.</p>
+      <h1>لم يتم الإعداد بعد</h1>
+      <p>اطلب من المدير رابط الإعداد الخاص بك (أو كود QR)، وافتحه <b>مرة واحدة وأنت متصل بالإنترنت</b>.</p>
     </section>
 
     <section id="home" hidden>
-      <p class="hello">Hi <b id="who"></b></p>
+      <p class="hello">أهلاً <b id="who"></b></p>
       <p id="state" class="state"></p>
-      <button id="btn-in" class="big in">I ARRIVED</button>
-      <button id="btn-out" class="big out">I'M LEAVING</button>
-      <p class="hint">Tap a button, then point your camera at the QR poster on the truck. Works without internet – it will send automatically later.</p>
+      <button id="btn-in" class="big in">وصلت</button>
+      <button id="btn-out" class="big out">أنا ماشي</button>
+      <p class="hint">اضغط على الزر، ثم وجّه الكاميرا إلى ملصق QR الموجود على العربة. يعمل بدون إنترنت – وسيتم الإرسال تلقائياً لاحقاً.</p>
 
       <div id="pending" class="pending" hidden></div>
-      <button id="btn-sync" class="small">Send now</button>
+      <button id="btn-sync" class="small">إرسال الآن</button>
 
-      <h2>My recent punches</h2>
+      <h2>آخر تسجيلاتي</h2>
       <ul id="history"></ul>
     </section>
   </main>
@@ -42,10 +42,10 @@
   <div id="scanner" hidden>
     <video id="video" playsinline muted></video>
     <div class="frame"></div>
-    <p class="scan-msg">Point at the QR poster on the truck</p>
+    <p class="scan-msg">وجّه الكاميرا إلى ملصق QR على العربة</p>
     <div class="scan-actions">
-      <button id="btn-manual" class="small">Type code instead</button>
-      <button id="btn-cancel" class="small">Cancel</button>
+      <button id="btn-manual" class="small">اكتب الكود بدلاً من ذلك</button>
+      <button id="btn-cancel" class="small">إلغاء</button>
     </div>
   </div>
 

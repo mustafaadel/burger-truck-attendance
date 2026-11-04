@@ -7,10 +7,10 @@ const api = async (url, opts = {}) => {
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const qrImg = (data) => `/api/admin/qr.svg?data=${encodeURIComponent(data)}`;
 const FLAG_LABEL = {
-  hash_mismatch: 'edited', chain_broken: 'records missing/edited', missing_previous: 'earlier record missing',
-  clock_went_back: 'clock moved back', phone_clock_wrong: 'phone clock wrong', future_time: 'future time',
-  new_device: 'new phone', qr_missing: 'no QR', qr_invalid: 'wrong QR', qr_retired: 'old poster',
-  qr_before_poster: 'clock set back', no_gps: 'no location', gps_inaccurate: 'weak location', far_from_others: 'far from truck',
+  hash_mismatch: 'تم تعديله', chain_broken: 'تسجيلات محذوفة/معدلة', missing_previous: 'تسجيل سابق مفقود',
+  clock_went_back: 'الساعة رجعت للخلف', phone_clock_wrong: 'ساعة الهاتف خطأ', future_time: 'وقت في المستقبل',
+  new_device: 'هاتف جديد', qr_missing: 'بدون QR', qr_invalid: 'QR خطأ', qr_retired: 'ملصق قديم',
+  qr_before_poster: 'الساعة مُرجعة', no_gps: 'بدون موقع', gps_inaccurate: 'موقع غير دقيق', far_from_others: 'بعيد عن العربة',
 };
 
 let config, employees = [];
@@ -34,25 +34,25 @@ async function loadReport() {
 
   $('#days tbody').innerHTML = rep.days.map((d) => `<tr>
     <td>${d.date}</td><td>${esc(d.name)}</td><td>${d.firstIn ?? '—'}</td>
-    <td>${d.lastOut ?? (d.stillOpen ? '<i>not yet</i>' : '—')}</td>
-    <td>${Math.floor(d.workedMinutes / 60)}h ${String(d.workedMinutes % 60).padStart(2, '0')}m</td>
-    <td>${d.flagged ? `<span class="flag">${d.flagged} to check</span>` : '<span class="ok">✓</span>'}</td></tr>`).join('')
-    || '<tr><td colspan="6" class="muted">No punches received for these dates yet.</td></tr>';
+    <td>${d.lastOut ?? (d.stillOpen ? '<i>لم ينصرف بعد</i>' : '—')}</td>
+    <td>${Math.floor(d.workedMinutes / 60)} س ${String(d.workedMinutes % 60).padStart(2, '0')} د</td>
+    <td>${d.flagged ? `<span class="flag">${d.flagged} للمراجعة</span>` : '<span class="ok">✓</span>'}</td></tr>`).join('')
+    || '<tr><td colspan="6" class="muted">لم تصل تسجيلات لهذه التواريخ بعد.</td></tr>';
 
   $('#punches tbody').innerHTML = rep.punches.map((p) => `<tr>
     <td>${p.date}</td>
-    <td>${p.time}${p.estimated ? `<br><span class="muted">real ≈ ${esc(p.estimated)}</span>` : ''}</td>
+    <td>${p.time}${p.estimated ? `<br><span class="muted">الحقيقي ≈ ${esc(p.estimated)}</span>` : ''}</td>
     <td>${esc(p.name)}</td>
-    <td class="${p.type}">${p.type === 'in' ? 'Arrived' : 'Left'}</td>
-    <td>${p.lat != null ? `<a target="_blank" rel="noopener" href="https://maps.google.com/?q=${p.lat},${p.lng}">map</a> <span class="muted">±${Math.round(p.accuracy ?? 0)}m</span>` : (p.source === 'manual' ? '' : '—')}</td>
-    <td>${p.source === 'manual' ? `<span class="muted">by hand${p.note ? ': ' + esc(p.note) : ''}</span>` : flags(p.flags)}</td>
-    <td>${p.source === 'manual' ? `<button data-del="${p.id}">Delete</button>` : ''}</td></tr>`).join('')
-    || '<tr><td colspan="7" class="muted">Nothing yet.</td></tr>';
+    <td class="${p.type}">${p.type === 'in' ? 'وصول' : 'انصراف'}</td>
+    <td>${p.lat != null ? `<a target="_blank" rel="noopener" href="https://maps.google.com/?q=${p.lat},${p.lng}">خريطة</a> <span class="muted">±${Math.round(p.accuracy ?? 0)} م</span>` : (p.source === 'manual' ? '' : '—')}</td>
+    <td>${p.source === 'manual' ? `<span class="muted">يدوي${p.note ? ': ' + esc(p.note) : ''}</span>` : flags(p.flags)}</td>
+    <td>${p.source === 'manual' ? `<button data-del="${p.id}">حذف</button>` : ''}</td></tr>`).join('')
+    || '<tr><td colspan="7" class="muted">لا يوجد شيء بعد.</td></tr>';
 }
 $('#filters').onsubmit = (e) => { e.preventDefault(); loadReport(); };
 $('#punches').onclick = async (e) => {
   const id = e.target.dataset?.del;
-  if (id && confirm('Delete this hand-entered punch?')) { await api(`/api/admin/punches/${id}`, { method: 'DELETE' }); loadReport(); }
+  if (id && confirm('حذف هذا التسجيل اليدوي؟')) { await api(`/api/admin/punches/${id}`, { method: 'DELETE' }); loadReport(); }
 };
 $('#manual').onsubmit = async (e) => {
   e.preventDefault();
@@ -67,16 +67,16 @@ async function loadEmployees() {
   employees = await api('/api/admin/employees');
   const opts = employees.filter((e) => e.active).map((e) => `<option value="${e.id}">${esc(e.name)}</option>`).join('');
   const sel = $('#filters [name=employee]'); const cur = sel.value;
-  sel.innerHTML = '<option value="">Everyone</option>' + opts; sel.value = cur;
+  sel.innerHTML = '<option value="">الكل</option>' + opts; sel.value = cur;
   $('#manual [name=employeeId]').innerHTML = opts;
   $('#emps tbody').innerHTML = employees.map((e) => `<tr>
     <td>${esc(e.name)}</td><td>${esc(e.phone)}</td>
-    <td>${e.last_sync ? new Date(e.last_sync).toLocaleString() : '<span class="muted">never</span>'}</td>
-    <td>${e.active ? 'active' : '<span class="muted">disabled</span>'}</td>
-    <td><button data-act="link" data-id="${e.id}">Setup link / QR</button>
-        <button data-act="reset" data-id="${e.id}">New link</button>
-        <button data-act="toggle" data-id="${e.id}">${e.active ? 'Disable' : 'Enable'}</button></td></tr>`).join('')
-    || '<tr><td colspan="5" class="muted">Add your first employee above.</td></tr>';
+    <td>${e.last_sync ? new Date(e.last_sync).toLocaleString('ar-EG') : '<span class="muted">أبداً</span>'}</td>
+    <td>${e.active ? 'نشط' : '<span class="muted">موقوف</span>'}</td>
+    <td><button data-act="link" data-id="${e.id}">رابط الإعداد / QR</button>
+        <button data-act="reset" data-id="${e.id}">رابط جديد</button>
+        <button data-act="toggle" data-id="${e.id}">${e.active ? 'إيقاف' : 'تفعيل'}</button></td></tr>`).join('')
+    || '<tr><td colspan="5" class="muted">أضف أول موظف من الأعلى.</td></tr>';
 }
 $('#add-emp').onsubmit = async (e) => {
   e.preventDefault();
@@ -88,12 +88,12 @@ $('#emps').onclick = async (e) => {
   const emp = employees.find((x) => x.id === Number(id));
   if (act === 'link') {
     const link = `${location.origin}/#enroll=${emp.token}`;
-    $('#dlg-body').innerHTML = `<h3>${esc(emp.name)}'s setup link</h3>
-      <p>Scan with <b>${esc(emp.name)}'s</b> phone camera (needs internet once), or send them the link. Don't share it with anyone else.</p>
+    $('#dlg-body').innerHTML = `<h3>رابط إعداد ${esc(emp.name)}</h3>
+      <p>امسحه بكاميرا هاتف <b>${esc(emp.name)}</b> (يحتاج إنترنت مرة واحدة)، أو أرسل له الرابط. لا تشاركه مع أي شخص آخر.</p>
       <img src="${qrImg(link)}" alt="QR"><p class="link">${esc(link)}</p>`;
     $('#dlg').showModal();
   } else if (act === 'reset') {
-    if (!confirm(`Make a new link for ${emp.name}? Their current phone will stop sending punches until they open the new link.`)) return;
+    if (!confirm(`إنشاء رابط جديد لـ ${emp.name}؟ سيتوقف هاتفه الحالي عن إرسال التسجيلات حتى يفتح الرابط الجديد.`)) return;
     await api(`/api/admin/employees/${id}`, { method: 'PATCH', body: JSON.stringify({ resetLink: true }) });
     loadEmployees();
   } else if (act === 'toggle') {
@@ -109,7 +109,7 @@ async function loadPoster() {
   $('#poster-code').textContent = p.shortCode;
 }
 $('#rotate').onclick = async () => {
-  if (!confirm('Replace the poster? You must print the new one and put it on the truck right away.')) return;
+  if (!confirm('استبدال الملصق؟ يجب طباعة الملصق الجديد ولصقه على العربة فوراً.')) return;
   await api('/api/admin/poster/rotate', { method: 'POST' });
   loadPoster();
 };
