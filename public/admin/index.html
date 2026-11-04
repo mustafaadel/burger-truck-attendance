@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Truck Attendance – Owner</title>
+  <link rel="icon" href="/icon.svg">
+  <link rel="stylesheet" href="admin.css">
+  <script src="admin.js" type="module"></script>
+</head>
+<body>
+  <header>
+    <b>🍔 Truck Attendance</b>
+    <nav>
+      <button data-tab="attendance" class="active">Attendance</button>
+      <button data-tab="employees">Employees</button>
+      <button data-tab="poster">Truck poster</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tab-attendance">
+      <form id="filters" class="row">
+        <label>From <input type="date" name="from"></label>
+        <label>To <input type="date" name="to"></label>
+        <label>Employee <select name="employee"><option value="">Everyone</option></select></label>
+        <button>Show</button>
+        <a id="csv" class="btn">Download CSV</a>
+      </form>
+      <p class="muted">Times are shown in <span id="tz"></span>. Punches appear here once the employee's phone gets internet – that can be hours after the shift.</p>
+
+      <h2>Daily summary</h2>
+      <div class="table-wrap"><table id="days"><thead><tr><th>Date</th><th>Employee</th><th>Arrived</th><th>Left</th><th>Hours</th><th>Check</th></tr></thead><tbody></tbody></table></div>
+
+      <h2>All punches</h2>
+      <div class="table-wrap"><table id="punches"><thead><tr><th>Date</th><th>Time</th><th>Employee</th><th></th><th>Location</th><th>Checks</th><th></th></tr></thead><tbody></tbody></table></div>
+
+      <details>
+        <summary>Add a punch by hand (paper sheet / forgotten phone)</summary>
+        <form id="manual" class="row">
+          <select name="employeeId" required></select>
+          <select name="type"><option value="in">Arrived</option><option value="out">Left</option></select>
+          <input type="datetime-local" name="localTime" required>
+          <input name="note" placeholder="Reason (e.g. signed paper sheet)">
+          <button>Add</button>
+        </form>
+      </details>
+    </section>
+
+    <section id="tab-employees" hidden>
+      <form id="add-emp" class="row">
+        <input name="name" placeholder="Name" required>
+        <input name="phone" placeholder="Phone (optional)">
+        <button>Add employee</button>
+      </form>
+      <div class="table-wrap"><table id="emps"><thead><tr><th>Name</th><th>Phone</th><th>Last sync</th><th>Status</th><th></th></tr></thead><tbody></tbody></table></div>
+      <p class="muted">Each employee opens their own setup link <b>once, with internet</b>, on their phone. After that the app works offline.</p>
+    </section>
+
+    <section id="tab-poster" hidden>
+      <p>Print this poster and stick it on the truck. Employees scan it with their phone when they arrive and leave. No power or internet needed at the truck.</p>
+      <div class="poster-preview"><img id="poster-qr" alt="QR"><div>Backup code: <b id="poster-code"></b></div></div>
+      <p class="row"><a href="poster.html" target="_blank" class="btn">Open printable poster</a>
+        <button id="rotate">Replace poster (print a new one)</button></p>
+      <p class="muted">Replace the poster if you think someone took a photo of it to clock in from home. Scans of the old poster will be flagged starting one hour after you replace it.</p>
+    </section>
+  </main>
+
+  <dialog id="dlg"><div id="dlg-body"></div><form method="dialog"><button>Close</button></form></dialog>
+</body>
+</html>

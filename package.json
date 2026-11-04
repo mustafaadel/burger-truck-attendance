@@ -1,0 +1,21 @@
+{
+  "name": "burger-truck-attendance",
+  "version": "1.0.0",
+  "description": "Offline-first attendance for a food truck: employees clock in with their own phone by scanning a paper QR poster",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/server.js",
+    "test": "node --disable-warning=ExperimentalWarning --test"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.22.3",
+    "jsqr": "^1.4.0",
+    "qrcode": "^1.5.4"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  }
+}
