@@ -21,7 +21,9 @@
   <main>
     <section id="not-enrolled" hidden>
       <h1>لم يتم الإعداد بعد</h1>
-      <p>اطلب من المدير رابط الإعداد الخاص بك (أو كود QR)، وافتحه <b>مرة واحدة وأنت متصل بالإنترنت</b>.</p>
+      <p>اطلب من المدير كود الإعداد الخاص بك، ثم اضغط الزر وامسحه. تحتاج إنترنت <b>لهذه المرة فقط</b>.</p>
+      <button id="btn-enroll" class="big in">امسح كود الإعداد</button>
+      <p class="hint">إذا أضفت التطبيق إلى الشاشة الرئيسية أو فتحته من متصفح آخر، امسح الكود مرة أخرى من هنا.</p>
     </section>
 
     <section id="home" hidden>
@@ -42,9 +44,9 @@
   <div id="scanner" hidden>
     <video id="video" playsinline muted></video>
     <div class="frame"></div>
-    <p class="scan-msg">وجّه الكاميرا إلى ملصق QR على العربة</p>
+    <p class="scan-msg" id="scan-msg"></p>
     <div class="scan-actions">
-      <button id="btn-manual" class="small">اكتب الكود بدلاً من ذلك</button>
+      <button id="btn-manual" class="small"></button>
       <button id="btn-cancel" class="small">إلغاء</button>
     </div>
   </div>

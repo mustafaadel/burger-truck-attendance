@@ -95,8 +95,23 @@ function getLocation() {
 }
 
 // ---------- QR scanner ----------
-function scanQR() {
+const POSTER_SCAN = {
+  message: 'وجّه الكاميرا إلى ملصق QR على العربة',
+  manualLabel: 'اكتب الكود بدلاً من ذلك',
+  manualPrompt: 'اكتب الكود المكوّن من 6 حروف المطبوع تحت الـ QR على ملصق العربة:',
+  upper: true,
+};
+const SETUP_SCAN = {
+  message: 'وجّه الكاميرا إلى كود الإعداد الذي أعطاه لك المدير',
+  manualLabel: 'لصق الرابط بدلاً من ذلك',
+  manualPrompt: 'الصق رابط الإعداد هنا:',
+  upper: false,
+};
+
+function scanQR(opts = POSTER_SCAN) {
   return new Promise(async (resolve) => {
+    $('scan-msg').textContent = opts.message;
+    $('btn-manual').textContent = opts.manualLabel;
     const sc = $('scanner'), video = $('video');
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -108,8 +123,8 @@ function scanQR() {
     };
     $('btn-cancel').onclick = () => finish(undefined);
     $('btn-manual').onclick = () => {
-      const c = prompt('اكتب الكود المكوّن من 6 حروف المطبوع تحت الـ QR على ملصق العربة:');
-      if (c && c.trim()) finish(c.trim().toUpperCase());
+      const c = prompt(opts.manualPrompt);
+      if (c && c.trim()) finish(opts.upper ? c.trim().toUpperCase() : c.trim());
     };
     sc.hidden = false;
     try {
@@ -117,7 +132,7 @@ function scanQR() {
       video.srcObject = stream;
       await video.play();
     } catch {
-      toast('الكاميرا غير متاحة – اكتب الكود بدلاً من ذلك.');
+      toast(`الكاميرا غير متاحة – ${opts.manualLabel}.`);
       return;
     }
     const tick = () => {
@@ -215,16 +230,16 @@ async function sync() {
   }
 }
 
-// ---------- enrollment via link: https://host/#enroll=TOKEN ----------
-async function enrollFromHash() {
-  const m = /enroll=([\w-]+)/.exec(location.hash);
-  if (!m) return;
-  history.replaceState(null, '', '/');
+// ---------- enrollment: link https://host/#enroll=TOKEN, or scanning that link's QR inside the app ----------
+// Each browser (and on iPhone, the home-screen app) has its own storage, so each one is set up separately.
+const enrollToken = (text) => /enroll=([\w-]+)/.exec(text || '')?.[1];
+
+async function enroll(token) {
   const prev = await kvGet('me');
-  const me = { token: m[1], name: null, deviceId: prev?.deviceId || crypto.randomUUID() };
+  const me = { token, name: null, deviceId: prev?.deviceId || crypto.randomUUID() };
   try {
     const r = await fetch('/api/me', { headers: { authorization: `Bearer ${me.token}` } });
-    if (r.status === 401) { toast('رابط الإعداد هذا لم يعد صالحاً.', 6000); return; }
+    if (r.status === 401) { toast('رابط الإعداد هذا لم يعد صالحاً. اطلب كوداً جديداً من المدير.', 6000); return; }
     if (r.ok) me.name = (await r.json()).name;
   } catch { /* offline: keep token, name comes later */ }
   await kvSet('me', me);
@@ -232,10 +247,28 @@ async function enrollFromHash() {
   toast(`أهلاً بك${me.name ? ' يا ' + me.name : ''}! أضف هذه الصفحة إلى الشاشة الرئيسية.`, 6000);
 }
 
+async function enrollFromHash() {
+  const token = enrollToken(location.hash);
+  if (!token) return;
+  history.replaceState(null, '', '/');
+  await enroll(token);
+}
+
+async function enrollByScan() {
+  const text = await scanQR(SETUP_SCAN);
+  if (text === undefined) return;
+  const token = enrollToken(text);
+  if (!token) { toast('هذا ليس كود إعداد. اطلب كود الإعداد الخاص بك من المدير.', 6000); return; }
+  await enroll(token);
+  await render();
+  sync();
+}
+
 // ---------- boot ----------
 (async () => {
   if (!window.isSecureContext) toast('يجب فتح التطبيق عبر https:// ليعمل.', 10000);
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  $('btn-enroll').onclick = enrollByScan;
   $('btn-in').onclick = () => punch('in');
   $('btn-out').onclick = () => punch('out');
   $('btn-sync').onclick = () => (navigator.onLine ? sync() : toast('لا يوجد إنترنت الآن. سيتم الإرسال تلقائياً لاحقاً.'));

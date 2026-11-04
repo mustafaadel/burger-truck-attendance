@@ -89,7 +89,7 @@ $('#emps').onclick = async (e) => {
   if (act === 'link') {
     const link = `${location.origin}/#enroll=${emp.token}`;
     $('#dlg-body').innerHTML = `<h3>رابط إعداد ${esc(emp.name)}</h3>
-      <p>امسحه بكاميرا هاتف <b>${esc(emp.name)}</b> (يحتاج إنترنت مرة واحدة)، أو أرسل له الرابط. لا تشاركه مع أي شخص آخر.</p>
+      <p>يفتح <b>${esc(emp.name)}</b> التطبيق على هاتفه ويضغط «امسح كود الإعداد» ثم يمسح هذا الكود (يحتاج إنترنت مرة واحدة)، أو أرسل له الرابط. على الآيفون: بعد إضافة التطبيق إلى الشاشة الرئيسية يمسح الكود مرة أخرى من داخله. لا تشاركه مع أي شخص آخر.</p>
       <img src="${qrImg(link)}" alt="QR"><p class="link">${esc(link)}</p>`;
     $('#dlg').showModal();
   } else if (act === 'reset') {

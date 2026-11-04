@@ -1,5 +1,5 @@
 // Caches the app so it opens with no internet. API calls always go to the network.
-const CACHE = 'clockin-v3';
+const CACHE = 'clockin-v4';
 const SHELL = ['/', '/app.js', '/style.css', '/manifest.webmanifest', '/icon.svg', '/vendor/jsQR.js'];
 
 self.addEventListener('install', (e) => {
