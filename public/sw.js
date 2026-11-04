@@ -1,6 +1,6 @@
 // Caches the app so it opens with no internet. API calls always go to the network.
-const CACHE = 'clockin-v2';
-const SHELL = ['/', '/index.html', '/app.js', '/style.css', '/manifest.webmanifest', '/icon.svg', '/vendor/jsQR.js'];
+const CACHE = 'clockin-v3';
+const SHELL = ['/', '/app.js', '/style.css', '/manifest.webmanifest', '/icon.svg', '/vendor/jsQR.js'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -16,7 +16,7 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/admin')) return;
-  const key = e.request.mode === 'navigate' ? '/index.html' : e.request;
+  const key = e.request.mode === 'navigate' ? '/' : e.request;
   // Cache first (works offline), refresh in the background when online.
   e.respondWith(caches.open(CACHE).then(async (cache) => {
     const cached = await cache.match(key, { ignoreSearch: true });

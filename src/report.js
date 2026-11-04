@@ -27,14 +27,14 @@ function haversine(a, b) {
 }
 const median = (xs) => { const s = [...xs].sort((a, b) => a - b); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 
-export function buildReport(db, { from, to, tz, employeeId }) {
+export async function buildReport(db, { from, to, tz, employeeId }) {
   // widen the SQL window by a day either side; exact filtering happens on local date
   const lo = Date.parse(addDays(from, -1) + 'T00:00:00Z');
   const hi = Date.parse(addDays(to, 2) + 'T00:00:00Z');
-  const rows = db.prepare(`
+  const rows = await db.all(`
     SELECT p.*, e.name FROM punches p JOIN employees e ON e.id = p.employee_id
     WHERE p.device_time BETWEEN ? AND ? ${employeeId ? 'AND p.employee_id = ?' : ''}
-    ORDER BY p.device_time`).all(...(employeeId ? [lo, hi, employeeId] : [lo, hi]));
+    ORDER BY p.device_time`, ...(employeeId ? [lo, hi, employeeId] : [lo, hi]));
 
   const punches = [];
   for (const r of rows) {

@@ -11,7 +11,21 @@
 * **لوحة المالك** (`/admin/`): مواعيد الوصول والانصراف، وعدد الساعات، وموقع كل تسجيل على الخريطة، وتنبيهات للتلاعب (تغيير ساعة الهاتف، تسجيل من مكان بعيد، استخدام صورة لملصق قديم، حذف أو تعديل تسجيلات)، وتصدير Excel/CSV.
 * **ورقة احتياطية** مطبوعة مع الملصق لمن نفد شحن هاتفه.
 
-التشغيل: `npm install` ثم `ADMIN_PASSWORD=كلمة_سر npm start`. يجب نشره على **HTTPS**.
+### الاستضافة المجانية (Cloudflare)
+
+مجانية بالكامل، بدون بطاقة ائتمان، وتعمل على HTTPS تلقائياً:
+
+1. أنشئ حساباً مجانياً على [cloudflare.com](https://dash.cloudflare.com/sign-up).
+2. ثبّت [Node.js](https://nodejs.org) (الإصدار 22 أو أحدث).
+3. في مجلد المشروع شغّل:
+   ```
+   npm install
+   npm run deploy:setup
+   ```
+   سيفتح المتصفح لتسجيل الدخول، ثم يطلب منك اختيار كلمة سر المالك.
+4. ستحصل على رابط مثل `https://burger-truck-attendance.اسمك.workers.dev`، ولوحة المالك على `/admin/`.
+
+للتحديث لاحقاً: `npm run deploy`. ولأخذ نسخة احتياطية من البيانات: `npm run backup`.
 
 </div>
 
@@ -50,17 +64,40 @@ The phone is the only device involved and the employee controls it, so nothing h
 
 Dead phone? Page 2 of the printed poster is a **paper backup sheet**. The owner types those entries in by hand. They are labelled "by hand" and can be deleted.
 
-## Run it
+## Free hosting (Cloudflare Workers + D1)
 
-Requires **Node.js 22.13+** (uses the built-in SQLite). No other database is needed.
+The app runs on Cloudflare's **free plan**. You get HTTPS automatically, it never sleeps, and no credit card is needed. A truck is far below the free limits (roughly 100,000 requests/day and a 5 GB database; one punch is a couple of requests).
+
+1. Create a free account at https://dash.cloudflare.com/sign-up
+2. Install [Node.js](https://nodejs.org) 22.13+.
+3. In this folder:
+
+   ```bash
+   npm install
+   npm run deploy:setup
+   ```
+
+   This logs you in (opens the browser), creates the database, creates the tables, deploys, and asks you to choose the **owner password**.
+4. It prints your address, e.g. `https://burger-truck-attendance.<your-name>.workers.dev`. The owner dashboard is at `/admin/`.
+
+Later:
+
+| Command | |
+|---|---|
+| `npm run deploy` | publish code changes |
+| `npx wrangler secret put ADMIN_PASSWORD` | change the owner password |
+| `npm run backup` | download all data to `backup.sql` |
+
+The time zone is set in `wrangler.toml` (`TRUCK_TZ`, default `Africa/Cairo`).
+
+### Running it on your own computer or server instead
+
+The same code also runs on plain Node with a local SQLite file:
 
 ```bash
 npm install
 ADMIN_PASSWORD=choose-a-password npm start
 ```
-
-* Owner dashboard: `http://localhost:3000/admin/`. Log in with any username and your `ADMIN_PASSWORD`.
-* Employee app: `http://localhost:3000/`, opened through each employee's setup link.
 
 | Env var | Default | |
 |---|---|---|
@@ -69,9 +106,21 @@ ADMIN_PASSWORD=choose-a-password npm start
 | `PORT` | `3000` | |
 | `DB_FILE` | `attendance.db` | SQLite file (back it up!) |
 
-### Deploying
+If you host it this way, it must be served over **HTTPS**. Phones only allow the camera, GPS and offline mode on secure sites.
 
-The app must be served over **HTTPS**. Phones only allow the camera, GPS, offline mode and hashing on secure sites. Any small VPS or Node host with a persistent disk works (e.g. Caddy in front for automatic HTTPS, or Render/Railway/Fly with a volume for the DB file).
+To test the Cloudflare version locally: put `ADMIN_PASSWORD=...` in a `.dev.vars` file and run `npm run dev`.
+
+### Code layout
+
+| | |
+|---|---|
+| `public/` | employee phone app (PWA) and `public/admin/` owner dashboard |
+| `src/app.js` | all HTTP routes (Hono), shared by both hosts |
+| `src/worker.js` / `src/db-d1.js` | Cloudflare entry point and database |
+| `src/server.js` / `src/db-node.js` | Node entry point and database |
+| `src/sync.js` | checks every uploaded punch (anti-cheating) |
+| `src/report.js` | daily summary, location outliers, CSV |
+| `migrations/` | database tables |
 
 ## Tests
 

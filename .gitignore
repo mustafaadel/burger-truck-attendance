@@ -2,3 +2,5 @@ node_modules/
 *.db
 *.db-*
 .env
+.dev.vars
+.wrangler/
