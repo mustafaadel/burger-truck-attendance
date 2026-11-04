@@ -14,5 +14,5 @@ TRUCK_TZ = "Africa/Cairo"
 [[d1_databases]]
 binding = "DB"
 database_name = "burger-truck-attendance"
-database_id = "00000000-0000-0000-0000-000000000000" # filled in by `npm run deploy:setup`
+database_id = "b0f2378b-1607-4ab6-a1be-47bff8b26019"
 migrations_dir = "migrations"
