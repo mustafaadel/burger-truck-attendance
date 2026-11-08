@@ -1,0 +1,54 @@
+plugins {
+    id 'com.android.application'
+}
+
+// The website this app opens. Must match public/.well-known/assetlinks.json on that site.
+def host = 'burger-truck-attendance.mustafaadel275.workers.dev'
+
+// Signing key is NOT in the repo. Pass it with environment variables (see README → Android app).
+def keystorePath = System.getenv('BTA_KEYSTORE')
+
+android {
+    namespace 'com.mustafaadel.burgertruck'
+    compileSdk 36
+    buildToolsVersion '36.0.0'
+
+    defaultConfig {
+        applicationId 'com.mustafaadel.burgertruck'
+        minSdk 26
+        targetSdk 36
+        versionCode 1
+        versionName '1.0'
+        manifestPlaceholders = [hostName: host, launchUrl: "https://${host}/".toString()]
+        resValue 'string', 'asset_statements',
+            "[{\"relation\": [\"delegate_permission/common.handle_all_urls\"], \"target\": {\"namespace\": \"web\", \"site\": \"https://${host}\"}}]".toString()
+    }
+
+    signingConfigs {
+        if (keystorePath) {
+            release {
+                storeFile file(keystorePath)
+                storePassword System.getenv('BTA_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('BTA_KEY_ALIAS') ?: 'burgertruck'
+                keyPassword System.getenv('BTA_KEY_PASSWORD') ?: System.getenv('BTA_KEYSTORE_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (keystorePath) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.7.4'
+    implementation 'com.google.androidbrowserhelper:locationdelegation:1.1.2'
+}

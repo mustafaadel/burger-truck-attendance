@@ -4,6 +4,7 @@ import qrcode from 'qrcode-generator';
 import { ingest } from './sync.js';
 import { buildReport, toCsv } from './report.js';
 import { localParts, zonedToEpoch } from './time.js';
+import { assetLinks } from './assetlinks.js';
 
 const randomBytes = (n) => crypto.getRandomValues(new Uint8Array(n));
 const token = () => btoa(String.fromCharCode(...randomBytes(24))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -42,6 +43,8 @@ export function createApp({ deps, adminStatic }) {
     }
     return p;
   }
+
+  app.get('/.well-known/assetlinks.json', (c) => c.json(assetLinks));
 
   // ---------- employee API (bearer token from the enrollment link) ----------
   async function employeeAuth(c, next) {

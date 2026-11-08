@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple burger, drawn inside the 66dp safe zone of a 108dp adaptive icon. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- top bun -->
+    <path android:fillColor="#FBBF24" android:pathData="M31,52 C31,38 42,31 54,31 C66,31 77,38 77,52 Z" />
+    <path android:fillColor="#FFF7ED" android:pathData="M45,39 a1.6,1.1 0 1,0 3.2,0 a1.6,1.1 0 1,0 -3.2,0 Z M56,37 a1.6,1.1 0 1,0 3.2,0 a1.6,1.1 0 1,0 -3.2,0 Z M63,44 a1.6,1.1 0 1,0 3.2,0 a1.6,1.1 0 1,0 -3.2,0 Z M39,46 a1.6,1.1 0 1,0 3.2,0 a1.6,1.1 0 1,0 -3.2,0 Z M51,45 a1.6,1.1 0 1,0 3.2,0 a1.6,1.1 0 1,0 -3.2,0 Z" />
+    <!-- lettuce -->
+    <path android:fillColor="#4ADE80" android:pathData="M29,53 H79 V56 C76,59 73,56 70,59 C67,56 64,59 61,56 C58,59 55,56 52,59 C49,56 46,59 43,56 C40,59 37,56 34,59 C32,57 30,58 29,56 Z" />
+    <!-- patty -->
+    <path android:fillColor="#7C2D12" android:pathData="M32,59 H76 A3,3 0 0,1 79,62 V64 A3,3 0 0,1 76,67 H32 A3,3 0 0,1 29,64 V62 A3,3 0 0,1 32,59 Z" />
+    <!-- bottom bun -->
+    <path android:fillColor="#FBBF24" android:pathData="M30,69 H78 V72 C78,75.5 75.5,77 72,77 H36 C32.5,77 30,75.5 30,72 Z" />
+</vector>
