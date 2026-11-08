@@ -27,6 +27,10 @@
 
 للتحديث لاحقاً: `npm run deploy`. ولأخذ نسخة احتياطية من البيانات: `npm run backup`.
 
+### تطبيق أندرويد (APK)
+
+يوجد أيضاً تطبيق أندرويد (ملف APK) يفتح نفس الموقع بملء الشاشة وبأيقونة خاصة. أرسل ملف الـ APK للموظف (مثلاً على واتساب)، فيفتحه ويسمح بـ«تثبيت تطبيقات من مصادر غير معروفة» ثم يثبّته. **احتفظ بملف مفتاح التوقيع (`.jks`) وكلمة السر في مكان آمن**؛ بدونهما لا يمكن إصدار تحديثات للتطبيق.
+
 </div>
 
 Clock-in / clock-out for food-truck staff, built for two constraints:
@@ -121,6 +125,29 @@ To test the Cloudflare version locally: put `ADMIN_PASSWORD=...` in a `.dev.vars
 | `src/sync.js` | checks every uploaded punch (anti-cheating) |
 | `src/report.js` | daily summary, location outliers, CSV |
 | `migrations/` | database tables |
+
+## Android app (APK)
+
+`android/` is a tiny Android app (a [Trusted Web Activity](https://developer.chrome.com/docs/android/trusted-web-activity)). It opens the live site full-screen using Chrome's engine, with its own icon and no address bar. Everything else, including offline mode, camera and saved punches, is still the website. So **website updates reach the app automatically**, and the APK only needs rebuilding if the site address, icon or name changes.
+
+* Package: `com.mustafaadel.burgertruck`. Needs Android 8+ and Chrome installed (it is on almost every Android phone).
+* The site serves `/.well-known/assetlinks.json` (from `src/assetlinks.js`) with the **public** fingerprint of the signing key. That is what removes the address bar.
+* The **signing key is not in this repo**. The owner keeps `burger-truck-release.jks` and its password. Every future APK must be signed with the same key, or phones will refuse the update.
+
+Install on a phone: send the `.apk` (e.g. on WhatsApp), open it, allow "install unknown apps" when asked, then install. Open the app and tap **امسح كود الإعداد** to scan the employee's setup QR.
+
+Rebuild (needs JDK 17+, Gradle 8.13+, and the Android SDK with `platforms;android-36` and `build-tools;36.0.0`):
+
+```bash
+cd android
+export ANDROID_HOME=/path/to/android-sdk
+export BTA_KEYSTORE=/path/to/burger-truck-release.jks
+export BTA_KEYSTORE_PASSWORD='the password'
+gradle assembleRelease
+# -> android/app/build/outputs/apk/release/app-release.apk
+```
+
+Bump `versionCode` in `android/app/build.gradle` for each new APK. If you ever change the domain, update `host` in `android/app/build.gradle` and re-sign.
 
 ## Tests
 
